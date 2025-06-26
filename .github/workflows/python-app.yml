@@ -1,4 +1,4 @@
-name: CI - Build & Deploy with ArgoCD (Unsafe Hardcoded Credentials)
+name: CI - Build & Deploy with ArgoCD (Testing - Hardcoded Credentials)
 
 on:
   workflow_dispatch:
@@ -7,6 +7,9 @@ on:
         description: 'Docker Image Tag (e.g. 1.1)'
         required: true
         default: '1.1'
+
+permissions:
+  contents: write
 
 jobs:
   build-and-push:
@@ -19,8 +22,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
-        run: echo "Iphone@29082002" | docker login -u sahilk737 --password-stdin
+      - name: Login to Docker Hub (Hardcoded for testing)
+        run: echo "Iphone@29082002" | docker login -u "sahilk737" --password-stdin
 
       - name: Build and push image to Docker Hub
         run: |
@@ -29,8 +32,7 @@ jobs:
 
       - name: Update deployment.yaml with new image tag
         run: |
-          sed -i "s|image: sahilk737/tomcat:.*|image: sahilk737/tomcat:1.1|" k8s/deployment.yaml
-
+          sed -i "s|image: sahilk737/tomcat:.*|image: sahilk737/tomcat:${{ github.event.inputs.image_tag }}|" k8s/deployment.yaml
 
       - name: Commit and push updated manifest
         uses: EndBug/add-and-commit@v9
@@ -38,3 +40,7 @@ jobs:
           add: 'k8s/deployment.yaml'
           message: "Update image to sahilk737/tomcat:${{ github.event.inputs.image_tag }}"
           push: true
+          author_name: "GitHub Actions"
+          author_email: "github-actions[bot]@users.noreply.github.com"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
