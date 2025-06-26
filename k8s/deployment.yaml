@@ -1,18 +1,63 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: flask-app
-  namespace: argocd
+  name: tomcat-app
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/sahilk020/python_flask.git
-    targetRevision: HEAD
-    path: k8s
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: default
-  syncPolicy:
-    automated:
-      selfHeal: true
-      prune: true
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat-app
+  template:
+    metadata:
+      labels:
+        app: tomcat-app
+    spec:
+      containers:
+      - name: tomcat-container
+        image: sahilk737/tomcat:1.2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_SECRET_KEY
+          value: "MySecretKey123"
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log/flask
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 20
+          periodSeconds: 15
+
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          failureThreshold: 30
+          periodSeconds: 5
+
+      - name: promtail
+        image: grafana/promtail:2.9.3
+        args:
+        - -config.file=/etc/promtail/config.yml
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log/flask
+        - name: promtail-config
+          mountPath: /etc/promtail
+
+      volumes:
+      - name: log-volume
+        emptyDir: {}
+      - name: promtail-config
+        configMap:
+          name: promtail-config
