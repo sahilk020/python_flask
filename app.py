@@ -1,60 +1,37 @@
-from flask import Flask, jsonify, render_template, request
-import pymysql
+from flask import Flask
+import os
+import logging
 
 app = Flask(__name__)
 
-def get_db_connection():
-    connection = pymysql.connect(host='mydb.cylck8yh5jkc.eu-central-1.rds.amazonaws.com',  # Replace with your RDS endpoint
-                                 user='dbuser',      # Replace with your RDS username
-                                 password='dbpassword',  # Replace with your RDS password
-                                 db='devprojdb',   # Replace with your database name
-                                 charset='utf8mb4',
-                                 cursorclass=pymysql.cursors.DictCursor)
-    return connection
+# Load secret from environment variable or fallback
+SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'defaultsecret')
+app.config['SECRET_KEY'] = SECRET_KEY
+
+# Create log directory if it doesn't exist
+log_dir = '/var/log/flask'
+os.makedirs(log_dir, exist_ok=True)
+
+# Configure logging to file
+log_file = os.path.join(log_dir, 'app.log')
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s: %(message)s',
+)
+
+# Log app start
+app.logger.info("✅ Flask app is starting...")
+
+@app.route('/')
+def home():
+    app.logger.info("Accessed / route")
+    return f"✅ Hello from Flask! Secret key is: {SECRET_KEY}"
 
 @app.route('/health')
 def health():
-    return "Up & Running"
+    app.logger.info("Health check OK")
+    return "OK", 200
 
-@app.route('/create_table')
-def create_table():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    create_table_query = """
-        CREATE TABLE IF NOT EXISTS example_table (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL
-        )
-    """
-    cursor.execute(create_table_query)
-    connection.commit()
-    connection.close()
-    return "Table created successfully"
-
-@app.route('/insert_record', methods=['POST'])
-def insert_record():
-    name = request.json['name']
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    insert_query = "INSERT INTO example_table (name) VALUES (%s)"
-    cursor.execute(insert_query, (name,))
-    connection.commit()
-    connection.close()
-    return "Record inserted successfully"
-
-@app.route('/data')
-def data():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute('SELECT * FROM example_table')
-    result = cursor.fetchall()
-    connection.close()
-    return jsonify(result)
-
-# UI route
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
