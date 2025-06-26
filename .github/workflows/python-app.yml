@@ -29,7 +29,8 @@ jobs:
 
       - name: Update deployment.yaml with new image tag
         run: |
-          sed -i "s|image: sahilk737/tomcat:.*|image: sahilk737/tomcat:${{ github.event.inputs.image_tag }}|" python_flask/k8s/deployment.yaml
+          sed -i "s|image: sahilk737/tomcat:.*|image: sahilk737/tomcat:1.1|" k8s/deployment.yaml
+
 
       - name: Commit and push updated manifest
         uses: EndBug/add-and-commit@v9
