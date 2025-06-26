@@ -1,10 +1,10 @@
-name: CI - Build & Push to Docker Hub
+name: CI - Build & Deploy with ArgoCD (Unsafe Hardcoded Credentials)
 
 on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Docker image tag'
+        description: 'Docker Image Tag (e.g. 1.1)'
         required: true
         default: 'latest'
 
@@ -19,20 +19,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub (hardcoded)
+      - name: Login to Docker Hub
         run: echo "Iphone@29082002" | docker login -u sahilk737 --password-stdin
 
-      - name: Build and push image
+      - name: Build and push image to Docker Hub
         run: |
           docker build -t sahilk737/tomcat:${{ github.event.inputs.image_tag }} .
           docker push sahilk737/tomcat:${{ github.event.inputs.image_tag }}
 
-      - name: Update deployment manifest with new image
+      - name: Update deployment.yaml with new image tag
         run: |
-          sed -i "s|image:.*|image: sahilk737/tomcat:${{ github.event.inputs.image_tag }}|" k8s/deployment.yaml
+          sed -i "s|image: sahilk737/tomcat:.*|image: sahilk737/tomcat:${{ github.event.inputs.image_tag }}|" k8s/deployment.yaml
 
-      - name: Commit updated manifest
+      - name: Commit and push updated manifest
         uses: EndBug/add-and-commit@v9
         with:
           add: 'k8s/deployment.yaml'
           message: "Update image to sahilk737/tomcat:${{ github.event.inputs.image_tag }}"
+          push: true
