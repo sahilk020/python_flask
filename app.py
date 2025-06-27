@@ -4,23 +4,24 @@ import logging
 
 app = Flask(__name__)
 
-# Load secret from environment variable or fallback
 SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'defaultsecret')
 app.config['SECRET_KEY'] = SECRET_KEY
 
-# Create log directory if it doesn't exist
 log_dir = '/var/log/flask'
 os.makedirs(log_dir, exist_ok=True)
 
-# Configure logging to file
 log_file = os.path.join(log_dir, 'app.log')
-logging.basicConfig(
-    filename=log_file,
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s: %(message)s',
-)
 
-# Log app start
+# Explicit file handler
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add handler to Flask logger
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+
 app.logger.info("✅ Flask app is starting...")
 
 @app.route('/')
