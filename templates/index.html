@@ -1,56 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask REST API UI</title>
+  <meta charset="UTF-8">
+  <title>Flask App - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet">
 </head>
-<body>
-<h1>Flask REST API UI</h1>
+<body class="bg-light">
 
-<h2>Insert Record</h2>
-<form id="insertForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
-    <button type="button" onclick="insertRecord()">Insert Record</button>
-</form>
+  <div class="container mt-5">
+    <div class="card shadow p-4 rounded">
+      <h1 class="display-5 mb-4 text-primary">✅ Welcome to the Flask App</h1>
+      <p class="lead">Your <strong>Secret Key</strong> is:</p>
+      <div class="alert alert-info"><code>{{ secret }}</code></div>
+      <hr>
+      <p class="text-muted">This page is served using Flask with enhanced logging in NGINX-style format.</p>
+    </div>
+  </div>
 
-<h2>View Data</h2>
-<ul id="dataList"></ul>
-
-<script>
-    function insertRecord() {
-        const name = document.getElementById('name').value;
-        fetch('/insert_record', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 'name': name }),
-        })
-        .then(response => response.text())
-        .then(data => {
-            alert(data);
-            loadData();
-        });
-    }
-
-    function loadData() {
-        fetch('/data')
-        .then(response => response.json())
-        .then(data => {
-            const dataList = document.getElementById('dataList');
-            dataList.innerHTML = '';
-            data.forEach(record => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `ID: ${record.id}, Name: ${record.name}`;
-                dataList.appendChild(listItem);
-            });
-        });
-    }
-
-    // Load initial data when the page is loaded
-    loadData();
-</script>
 </body>
 </html>
