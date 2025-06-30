@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import logging
 import time
@@ -10,23 +10,17 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 log_dir = '/var/log/flask'
 os.makedirs(log_dir, exist_ok=True)
-
 log_file = os.path.join(log_dir, 'app.log')
 
-# Formatter for NGINX-style access logs
 nginx_formatter = logging.Formatter('%(message)s')
-
-# File handler
 file_handler = logging.FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(nginx_formatter)
 
-# Console handler
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(nginx_formatter)
 
-# Add handlers to logger
 app.logger.setLevel(logging.INFO)
 app.logger.addHandler(file_handler)
 app.logger.addHandler(console_handler)
@@ -37,7 +31,7 @@ def start_timer():
 
 @app.after_request
 def log_request(response):
-    duration = round((time.time() - request.start_time) * 1000, 2)  # in ms
+    duration = round((time.time() - request.start_time) * 1000, 2)
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     method = request.method
     path = request.path
@@ -49,7 +43,7 @@ def log_request(response):
 
 @app.route('/')
 def home():
-    return jsonify(message=f"✅ Hello from Flask! Secret key is: {SECRET_KEY}")
+    return render_template("index.html", secret=SECRET_KEY)
 
 @app.route('/health')
 def health():
